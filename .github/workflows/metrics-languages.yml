@@ -11,7 +11,7 @@ permissions:
 jobs:
   languages:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       # The metrics indepth analyzer clones repos without credentials, so private
       # repos are mirrored here and served to its container over local HTTP.
@@ -64,10 +64,11 @@ jobs:
           plugin_languages_indepth: yes
           plugin_languages_indepth_custom: ${{ steps.mirror.outputs.repos }}
           plugin_languages_analysis_timeout: 30
+          plugin_languages_analysis_timeout_repositories: 15
           plugin_languages_categories: programming
           plugin_languages_ignored: d, makefile, dockerfile, batchfile, powershell, mako, perl, roff, cmake
           plugin_languages_sections: most-used
+          plugin_languages_aliases: tsx:TypeScript, jsx:JavaScript
           plugin_languages_details: percentage
           plugin_languages_limit: 8
           plugin_languages_other: no
-          debug: yes
