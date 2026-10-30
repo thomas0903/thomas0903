@@ -34,4 +34,3 @@ jobs:
           plugin_languages_limit: 8
           plugin_languages_other: no
           debug: yes
-          debug: yes
