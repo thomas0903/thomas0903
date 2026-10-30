@@ -20,7 +20,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
           # Repos that are mostly vendored third-party code (and stall the analyzer)
-          SKIP: thomas0903/libpngfuzz
+          SKIP: thomas0903/libpngfuzz thomas0903/cca26-project
         run: |
           host=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
           repos=$(gh api graphql --paginate -f query='

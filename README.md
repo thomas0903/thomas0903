@@ -15,6 +15,9 @@
     <img alt="3D GitHub contribution graph" src="./profile-3d-contrib/profile-green-animate.svg" />
   </picture>
 </p>
+<p align="center">
+  <img alt="Most used languages" src="./metrics/languages.svg" />
+</p>
 
 ---
 [![](https://visitcount.itsvg.in/api?id=thomas0903&icon=0&color=0)](https://visitcount.itsvg.in)
