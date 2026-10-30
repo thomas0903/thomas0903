@@ -28,8 +28,10 @@ jobs:
           plugin_languages_indepth: yes
           plugin_languages_analysis_timeout: 30
           plugin_languages_categories: programming
-          plugin_languages_ignored: makefile, dockerfile, batchfile, powershell, mako, perl, roff, cmake
+          plugin_languages_ignored: d, makefile, dockerfile, batchfile, powershell, mako, perl, roff, cmake
           plugin_languages_sections: most-used
           plugin_languages_details: percentage
           plugin_languages_limit: 8
-          plugin_languages_other: yes
+          plugin_languages_other: no
+          debug: yes
+          debug: yes
