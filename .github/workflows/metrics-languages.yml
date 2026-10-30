@@ -11,6 +11,7 @@ permissions:
 jobs:
   languages:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       # The metrics indepth analyzer clones repos without credentials, so private
       # repos are mirrored here and served to its container over local HTTP.
@@ -18,6 +19,8 @@ jobs:
         id: mirror
         env:
           GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+          # Repos that are mostly vendored third-party code (and stall the analyzer)
+          SKIP: thomas0903/libpngfuzz
         run: |
           host=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
           repos=$(gh api graphql --paginate -f query='
@@ -32,11 +35,13 @@ jobs:
             }' --jq '.data.viewer.repositories.nodes[] | select(.isEmpty | not) | .nameWithOwner')
           urls=()
           for repo in $repos; do
-            dir="$RUNNER_TEMP/mirror/$repo.git"
+            [[ " $SKIP " == *" $repo "* ]] && continue
+            # metrics lowercases its inputs, so serve lowercase paths
+            dir="$RUNNER_TEMP/mirror/${repo,,}.git"
             if git clone --quiet --bare "https://x-access-token:${GH_TOKEN}@github.com/$repo" "$dir"; then
               git -C "$dir" remote remove origin
               git -C "$dir" update-server-info
-              urls+=("http://$host:8080/$repo.git")
+              urls+=("http://$host:8080/${repo,,}.git")
             fi
           done
           nohup python3 -m http.server 8080 --bind "$host" --directory "$RUNNER_TEMP/mirror" > /dev/null 2>&1 &
