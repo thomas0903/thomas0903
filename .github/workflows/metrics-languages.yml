@@ -12,6 +12,37 @@ jobs:
   languages:
     runs-on: ubuntu-latest
     steps:
+      # The metrics indepth analyzer clones repos without credentials, so private
+      # repos are mirrored here and served to its container over local HTTP.
+      - name: Mirror private repositories
+        id: mirror
+        env:
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+        run: |
+          host=$(docker network inspect bridge -f '{{(index .IPAM.Config 0).Gateway}}')
+          repos=$(gh api graphql --paginate -f query='
+            query($endCursor: String) {
+              viewer {
+                repositories(first: 100, after: $endCursor, isFork: false, privacy: PRIVATE,
+                             ownerAffiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes { nameWithOwner isEmpty }
+                }
+              }
+            }' --jq '.data.viewer.repositories.nodes[] | select(.isEmpty | not) | .nameWithOwner')
+          urls=()
+          for repo in $repos; do
+            dir="$RUNNER_TEMP/mirror/$repo.git"
+            if git clone --quiet --bare "https://x-access-token:${GH_TOKEN}@github.com/$repo" "$dir"; then
+              git -C "$dir" remote remove origin
+              git -C "$dir" update-server-info
+              urls+=("http://$host:8080/$repo.git")
+            fi
+          done
+          nohup python3 -m http.server 8080 --bind "$host" --directory "$RUNNER_TEMP/mirror" > /dev/null 2>&1 &
+          echo "Mirrored ${#urls[@]} private repositories"
+          echo "repos=$(IFS=,; echo "${urls[*]}")" >> "$GITHUB_OUTPUT"
+
       - uses: lowlighter/metrics@v3.34
         with:
           token: ${{ secrets.METRICS_TOKEN }}
@@ -26,6 +57,7 @@ jobs:
           commits_authoring: thomas0903, Thomas Molinari, 100191128+thomas0903@users.noreply.github.com
           plugin_languages: yes
           plugin_languages_indepth: yes
+          plugin_languages_indepth_custom: ${{ steps.mirror.outputs.repos }}
           plugin_languages_analysis_timeout: 30
           plugin_languages_categories: programming
           plugin_languages_ignored: d, makefile, dockerfile, batchfile, powershell, mako, perl, roff, cmake
